@@ -2,6 +2,7 @@
 Rust port of Python port of MATLAB `FNNLSa` algorithm
 
 [Original MATLAB by Rasmus Bro](http://www.mathworks.com/matlabcentral/fileexchange/3388-nnls-and-constrained-regression?focused=5051382&tab=function)
+
 [Python port by Daniel Elnatan](https://github.com/delnatan/FNNLSa)
 
 `fnnls` requires the `ndarray` and `ndarray-linalg` crates.
