@@ -8,7 +8,7 @@ Rust port of Python port of MATLAB `FNNLSa` algorithm
 `fnnls` requires the `ndarray` and `ndarray-linalg` crates.
 As far as I know, `fnnls` provides ~~the same~~ corrected output from the Python port above.
 
-A, poorly-formatted, updated `fnnls.py` file is provided in the main directory in case it is useful. I used this `fnnls.py` file as well as the original `Rasmus Bro` MATLAB file to try to fix an indexing error I believe was introduced in the source `fnnls.py` file. 
+A, poorly-formatted, updated `fnnls.py` file is provided in the main directory in case it is useful. I used this `fnnls.py` file as well as the original Rasmus Bro MATLAB file to try to fix an indexing error I believe was introduced in the source `fnnls.py` file. 
 
 ### Benchmarks have not been updated after indexing bug fix but should be similar to below
 Benchmarks for the same [600 x 1000] transformation matrix:
