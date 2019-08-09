@@ -1,6 +1,6 @@
 [package]
 name = "fnnls"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["igmanthony"]
 edition = "2018"
 license = "MIT"
@@ -9,11 +9,11 @@ readme = "README.md"
 description = "A port of a FNNLS algorithm"
 
 [dependencies]
-ndarray = "*" # currently 0.12.1
-ndarray-linalg = { version = "*", features = ["intel-mkl"]} # currently 0.11.1
+ndarray = "*"                                                 # currently 0.12.1
+ndarray-linalg = { version = "*", features = ["intel-mkl"]}   # currently 0.11.1
 
 [dev-dependencies]
-criterion = "*" # currently 0.2.11
+criterion = "*"                                               # currently 0.2.11
 
 [[bench]]
 name = "fnnls_benchmark"
