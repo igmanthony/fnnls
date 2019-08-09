@@ -8,75 +8,86 @@ use ndarray_linalg::Solve;
 use std::f64::{consts, EPSILON};
 
 
-pub fn fnnls(xtx:&Array2<f64>, xty:&Array1<f64>) -> (Array1<f64>, Array1<f64>) {
-    let (M, N)              = (xtx.rows(), xtx.cols());
-    let mut P               = Array::zeros(M); // passive; indices with vals > 0
-    let mut Z               = Array::from_iter(0..N);  // active; i w/ vals <= 0
-    let mut ZZ              = Array::from_iter(0..N);      // working active set
-    let mut x: Array1<f64>  = Array::zeros(N);        // initial solution vector
-    let mut w               = xty - &(xtx.dot(&x));             // weight vector
-    let mut it              = 0;                  // iterator for the while loop
-    let itmax               = 30 * N;                      // maximum iterations 
+pub fn fnnls(xtx: &Array2<f64>, xty: &Array1<f64>)
+    -> (Array1<f64>, Array1<f64>) {
+    let (M, N) = (xtx.rows(), xtx.cols());
+    let mut P = Array::zeros(M);               // passive; indices with vals > 0
+    let mut Z = Array::from_iter(0..N) + 1;            // active; i w/ vals <= 0
+    let mut ZZ = Array::from_iter(0..N) + 1;               // working active set
+    let mut x: Array1<f64> = Array::zeros(N);         // initial solution vector
+    let mut w = xty - &(xtx.dot(&x));                           // weight vector
+    let mut it = 0;                               // iterator for the while loop
+    let itmax = 30 * N;                                    // maximum iterations
 
     // Continue if indices in the active set or values > than machine epsilon
-    while Z.iter().any(|&i| i > 0) && ZZ.iter().any(|&i| &w[i] > &EPSILON) {
-        let t                   = max_index(&(ZZ.mapv(|i| w[i])));  // largest w
-        P[ZZ[t]]                = ZZ[t];              // move to the passive set
-        Z[ZZ[t]]                = 0;               // remove from the active set
-        ZZ                      = Array::from_vec(find_nonzero(&Z));
-        let mut PP              = Array::from_vec(find_nonzero(&P));
-        let mut s: Array1<f64>  = Array::zeros(N);             // trial solution
+    while Z.iter().any(|&i| i > 0) && ZZ.iter().any(|&i| &w[i - 1] > &EPSILON)
+    {
+        let t = max_index(&(ZZ.mapv(|i| w[i - 1]))) + 1;
+        P[ZZ[t - 1] - 1] = ZZ[t - 1];                 // move to the passive set
+        Z[ZZ[t - 1] - 1] = 0;                      // remove from the active set
+        ZZ = Array::from_vec(find_nonzero(&Z)) + 1;
+        let mut PP = Array::from_vec(find_nonzero(&P)) + 1;
+        let mut PPcopy = Array::from_vec(find_nonzero(&P)) + 1;
+        let mut s: Array1<f64> = Array::zeros(N);              // trial solution
         match PP.len() {
             0 => s[0] = 0.0,
-            1 => s[PP[0]] = xty[PP[0]] / xtx[[PP[0], PP[0]]],
+            1 => s[PP[0] - 1] = xty[PP[0] - 1] / xtx[[PP[0] - 1, PP[0] - 1]],
             _ => {
-                let xtx_pp_solution = slice_with_array(xtx, &PP)
-                                .solve_into(PP.mapv(|i| xty[i]))
-                                .unwrap();  // solve PP-reduced set of xtx @ xty
+                let xtx_pp_solution = slice_with_array(xtx, &(PPcopy - 1))
+                    .solve_into(PP.mapv(|i| xty[i - 1]))
+                    .unwrap();              // solve PP-reduced set of xtx @ xty
                 for (i, &value) in PP.indexed_iter() {
-                    s[value] = xtx_pp_solution[i];
+                    s[value - 1] = xtx_pp_solution[i];
                 }
             }
         }
-        for &i in ZZ.iter() { s[i] = 0.0; }      // set active coefficients to 0
+        for &i in ZZ.iter() {
+            s[i - 1] = 0.0;                      // set active coefficients to 0
+        }
 
-        while PP.iter().any(|&i| &s[i] <= &EPSILON) && it < itmax {
+        while (&PP).iter().any(|&i| &s[i - 1] <= &EPSILON) && it < itmax {
             it += 1;
             let s_mask = s.mapv(|e| e <= EPSILON);
-            let tmp = P.indexed_iter()
-                       .map(|(i, &v)| if s_mask[[i]] {v} else {0})
-                       .collect::<Vec<usize>>();
-            let QQ = Array::from_vec(find_nonzero_vec(&tmp));
-            let xQQ = QQ.mapv(|i| x[i]);
-            let alpha = min(&(&xQQ / &(&xQQ - &QQ.mapv(|i| s[i]))));
+            let tmp = P
+                .indexed_iter()
+                .map(|(i, &v)| if s_mask[[i]] { v } else { 0 })
+                .collect::<Vec<usize>>();
+            let QQ = Array::from_vec(find_nonzero_vec(&tmp)) + 1;
+            let xQQ = QQ.mapv(|i| x[i - 1]);
+            let alpha = min(&(&xQQ / &(&xQQ - &QQ.mapv(|i| s[i - 1]))));
             x = &x + &(alpha * (&s - &x));
             let mask = P.mapv(|i| i != 0) & x.mapv(|i| i.abs() < EPSILON);
             for (i, &v) in mask.indexed_iter() {
                 if v {
-                    Z[i] = i;
+                    Z[i] = i + 1;
                     P[i] = 0;
                 }
             }
-            PP = Array::from_vec(find_nonzero(&P));
-            ZZ = Array::from_vec(find_nonzero(&Z));
-            match PP.len() {  // verbatim repeat of the previous match statement
+            PP = Array::from_vec(find_nonzero(&P)) + 1;
+            PPcopy = Array::from_vec(find_nonzero(&P)) + 1;
+            ZZ = Array::from_vec(find_nonzero(&Z)) + 1;
+            match PP.len() {
+                // verbatim repeat of the previous match statement
                 0 => s[0] = 0.0,
-                1 => s[PP[0]] = xty[PP[0]] / xtx[[PP[0], PP[0]]],
+                1 => {
+                    s[PP[0] - 1] = xty[PP[0] - 1] / xtx[[PP[0] - 1, PP[0] - 1]]
+                }
                 _ => {
-                    let xtx_pp_solution = slice_with_array(xtx, &PP)
-                                            .solve_into(PP.mapv(|i| xty[i]))
-                                            .unwrap();
+                    let xtx_pp_solution = slice_with_array(xtx, &(PPcopy - 1))
+                        .solve_into(PP.mapv(|i| xty[i - 1]))
+                        .unwrap();
                     for (i, &value) in PP.indexed_iter() {
-                        s[value] = xtx_pp_solution[i];
+                        s[value - 1] = xtx_pp_solution[i];
                     }
                 }
             }
-            for &i in ZZ.iter() { s[i] = 0.0; };
+            for &i in ZZ.iter() {
+                s[i - 1] = 0.0;
+            }
         }
         x = s;                               // assign current solution (s) to x
         w = xty - &(xtx.dot(&x));                           // recompute weights
     }
-    // println!("{}, {}", x.sum(), w.sum());
     (x, w)
 }
 
