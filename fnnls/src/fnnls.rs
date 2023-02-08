@@ -4,8 +4,6 @@ use ndarray::{prelude::*, Dimension};
 use ndarray_linalg::Solve;
 use std::f64::EPSILON;
 
-use std::iter::FromIterator;
-
 pub fn fnnls(xtx: &Array2<f64>, xty: &Array1<f64>) -> (Array1<f64>, Array1<f64>) {
     let (M, N) = (xtx.nrows(), xtx.ncols());
     let mut P = Array::zeros(M); // passive; indices with vals > 0
@@ -41,7 +39,7 @@ pub fn fnnls(xtx: &Array2<f64>, xty: &Array1<f64>) -> (Array1<f64>, Array1<f64>)
             s[i - 1] = 0.0; // set active coefficients to 0
         }
 
-        while (&PP).iter().any(|&i| s[i - 1] <= EPSILON) && it < itmax {
+        while PP.iter().any(|&i| s[i - 1] <= EPSILON) && it < itmax {
             it += 1;
             let s_mask = s.mapv(|e| e <= EPSILON);
             let tmp = P
