@@ -1,0 +1,15 @@
+[package]
+name = "pyfnnls"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "pyfnnls"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.18", features = ["extension-module"] }
+ndarray = "0.15"
+numpy = "0.18"
+fnnls = {path = "../fnnls"}

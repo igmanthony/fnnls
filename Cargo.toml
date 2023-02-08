@@ -1,22 +1,8 @@
-[[bench]]
-name = 'fnnls_benchmark'
-harness = false
+[profile.dev]
+opt-level = 0
 
-[package]
-name = 'fnnls'
-version = '0.2.0'
-authors = ['igmanthony']
-edition = '2018'
-license = 'MIT'
-readme = 'README.md'
-description = 'A port of a FNNLS algorithm'
+[profile.release]
+lto = false
 
-[dependencies]
-ndarray = '0.13.0'
-
-[dependencies.ndarray-linalg]
-version = '0.12.0'
-features = ['intel-mkl']
-
-[dev-dependencies]
-criterion = '0.3.0'
+[workspace]
+members = ["fnnls", "python"]
