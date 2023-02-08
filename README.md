@@ -10,6 +10,8 @@ As far as I know, `fnnls` provides ~~the same~~ corrected output from the Python
 
 A, poorly-formatted, updated `fnnls.py` file is provided in the main directory in case it is useful. I used this `fnnls.py` file as well as the original Rasmus Bro MATLAB file to try to fix an indexing error I believe was introduced in the source `fnnls.py` file.
 
+Python bindings for the Rust port are provided through the `PyO3` and `maturin` crates.
+
 ### Benchmarks have not been updated after indexing bug fix but should be similar to below
 Benchmarks for the same [600 x 1000] transformation matrix:
 - Python `scipy.optimize.nnls` timeit: `35.23 ms per loop; n = 1000`
