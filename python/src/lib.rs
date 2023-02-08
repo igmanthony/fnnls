@@ -13,10 +13,10 @@ fn python(_py: Python, m: &PyModule) -> PyResult<()> {
         py: Python<'py>,
         a: PyReadonlyArray2<'_, f64>,
         b: PyReadonlyArray1<'_, f64>,
-    ) -> &'py PyArray1<f64> {
-        let (res, _w) = fnnls(&a.as_array().to_owned(), &b.as_array().to_owned());
-
-        return res.into_pyarray(py);
+    ) -> (&'py PyArray1<f64>, &'py PyArray1<f64>) {
+        let (res, w) = fnnls(&a.as_array().to_owned(), &b.as_array().to_owned());
+        
+        return (res.into_pyarray(py), w.into_pyarray(py));
     }
     Ok(())
 }
